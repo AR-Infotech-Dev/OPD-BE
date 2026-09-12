@@ -198,18 +198,24 @@ export const getFilteredCount = async ({ table = "", where = {}, join = [], othe
 // =====================================
 // INSERT
 // =====================================
-export const saveMasterDetails = async ({ table = "", data = {} } = {}) => {
+export const saveMasterDetails = async ({ table = "", data = {}, onDuplicateUpdate = {} } = {}) => {
     const normalizedData = normalizeWriteData(data);
     const columns = Object.keys(normalizedData);
     const values = Object.values(normalizedData);
 
     const placeholders = columns.map(() => "?").join(",");
 
-    const sql = `
+    let sql = `
     INSERT INTO ${DB_PREFIX}${table}
     (${columns.join(",")})
     VALUES (${placeholders})
   `;
+
+    const updates = normalizeWriteData(onDuplicateUpdate);
+    if (Object.keys(updates).length) {
+        sql += ' ON DUPLICATE KEY UPDATE ' + Object.keys(updates).map(key => key + ' = ?').join(', ');
+        values.push(...Object.values(updates));
+    }
 
     const result = await query(sql, values);
     return result;

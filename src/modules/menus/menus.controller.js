@@ -1,3 +1,4 @@
+import * as MenuModel from './menus.model.js';
 import * as CommonModel from "#shared/models/common.model.js";
 import { successResponse, failureResponse } from "#shared/utils/apiResponse.js";
 import { prepareFilterData } from "#shared/utils/filter.builder.js";
@@ -23,11 +24,9 @@ const custom_columns = {
     key2: "adminID",
   },
 };
-
-// =============================================
-// VALIDATION
-// =============================================
 const menuValidationRules = {
+  is_parent: { label: 'Parent Menu', type: 'raw' },
+  parent_id: { label: 'Parent ID', type: 'number', min: 0 },
   menu_name: { label: "Menu Name", required: true },
   table_name: { label: "Table Name" },
   module_name: { label: "Module Name" },
@@ -65,7 +64,7 @@ export const list = async (req, res) => {
       other: {
         orderBy,
         order,
-        searchColumns: ["menuName", "module_name", "menuLink"],
+        searchColumns: ["menu_name", "module_name", "menu_link"],
       },
       default_columns,
       custom_columns,
@@ -125,7 +124,7 @@ export const list = async (req, res) => {
   } catch (error) {
     return failureResponse(res, {
       code: 2008,
-      httpStatus: 500,
+      httpStatus: error.status || 500,
       message: error.message,
     });
   }
@@ -153,7 +152,7 @@ export const menulist = async (req, res) => {
       other: {
         orderBy,
         order,
-        searchColumns: ["menuName", "module_name", "menuLink"],
+        searchColumns: ["menu_name", "module_name", "menu_link"],
       },
       default_columns,
       custom_columns,
@@ -214,7 +213,7 @@ export const menulist = async (req, res) => {
   } catch (error) {
     return failureResponse(res, {
       code: 2008,
-      httpStatus: 500,
+      httpStatus: error.status || 500,
       message: error.message,
     });
   }
@@ -244,7 +243,7 @@ export const getMenuDetails = async (req, res) => {
         data.created_by = req.user.adminID;
         data.created_date = toMysqlDateTime();
 
-        const result = await CommonModel.saveMasterDetails({ table: MODULE_TABLE, data, });
+        const result = await MenuModel.saveMenu(data);
 
         return successResponse(res, {
           code: 1001,
@@ -276,11 +275,7 @@ export const getMenuDetails = async (req, res) => {
         data.modified_by = req.user.adminID;
         data.modified_date = toMysqlDateTime();
 
-        await CommonModel.updateMasterDetails({
-          table: MODULE_TABLE,
-          data,
-          where: { menu_id },
-        });
+        await MenuModel.saveMenu(data, menu_id);
 
         return successResponse(res, {
           code: 1002,
@@ -330,7 +325,7 @@ export const getMenuDetails = async (req, res) => {
   } catch (error) {
     return failureResponse(res, {
       code: 2008,
-      httpStatus: 500,
+      httpStatus: error.status || 500,
       message: error.message,
     });
   }
@@ -359,10 +354,7 @@ export const changeStatus = async (req, res) => {
       });
     }
 
-    await CommonModel.deleteMasterDetails({
-      table: MODULE_TABLE,
-      where: { menu_id: ids },
-    });
+    await MenuModel.deleteMenus(ids);
 
     return successResponse(res, {
       code: 1003,
@@ -373,7 +365,7 @@ export const changeStatus = async (req, res) => {
   } catch (error) {
     return failureResponse(res, {
       code: 2008,
-      httpStatus: 500,
+      httpStatus: error.status || 500,
       message: error.message,
     });
   }
@@ -383,10 +375,7 @@ export const updatePositions = async (req, res) => {
   try {
     const { positions = [] } = req.body;
     
-    await CommonModel.updateMenuPositions({
-      table: MODULE_TABLE,
-      positions,
-    });
+    await MenuModel.savePositions(positions, req.user.adminID);
 
     return successResponse(res, {
       code: 1002,
@@ -399,7 +388,7 @@ export const updatePositions = async (req, res) => {
     
     return failureResponse(res, {
       code: 2008,
-      httpStatus: 500,
+      httpStatus: error.status || 500,
       message: error.message,
     });
   }

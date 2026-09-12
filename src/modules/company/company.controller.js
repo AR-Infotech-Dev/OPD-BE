@@ -776,7 +776,7 @@ export const exportCompanyDb = async (req, res) => {
       ["company_master", `company_id = ${companyId}`],
       ["user_role_master", `(company_id = ${companyId} OR company_id IS NULL OR company_id = 0)`],
       ["admin", `(company_id = ${companyId} OR default_company = ${companyId})`],
-      ["module_access", `company_id = ${companyId}`],
+      ["role_module_access", `company_id = ${companyId}`],
       ["categories", `(is_sys_category = 'yes' OR company_id = ${companyId})`],
       ["products", `(company_id = ${companyId} OR company_id IS NULL)`],
       ["customer", `company_id = ${companyId}`],

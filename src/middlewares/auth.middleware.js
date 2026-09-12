@@ -1,3 +1,4 @@
+import { getCurrentAccessUser } from '#shared/utils/roleAccess.js';
 import jwt from "jsonwebtoken";
 import { env } from "#config/env.js";
 import { failureResponse } from "#shared/utils/apiResponse.js";
@@ -70,7 +71,9 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
-    req.user = decoded;
+    const currentUser = await getCurrentAccessUser(decoded.adminID);
+    if (!currentUser) return failureResponse(res, {code: 2007, httpStatus: 401, message: 'User or role is inactive'});
+    req.user = { ...decoded, ...currentUser };
 
     return next();
   } catch (error) {
