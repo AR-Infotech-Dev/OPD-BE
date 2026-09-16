@@ -15,6 +15,7 @@ const defaultTransporter = nodemailer.createTransport({
 });
 
 const companyMailerCache = new Map();
+const clinicMailerCache = new Map();
 
 export const clearCompanyMailerCache = (company_id = null) => {
     if (company_id) {
@@ -23,6 +24,14 @@ export const clearCompanyMailerCache = (company_id = null) => {
         return;
     }
     companyMailerCache.clear();
+};
+export const clearClinicMailerCache = (clinic_id = null) => {
+    if (clinic_id) {
+        clinicMailerCache.delete(clinic_id);
+        clinicMailerCache.delete(String(clinic_id));
+        return;
+    }
+    clinicMailerCache.clear();
 };
 
 const PROVIDER_DEFAULTS = {
