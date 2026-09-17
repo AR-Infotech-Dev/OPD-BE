@@ -1,10 +1,11 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-export const COMPANY_ASSET_ROOT = path.resolve(__dirname, "../../../public/images/clinic");
-export const getClinicAssetDir = (clinicId) => path.join(COMPANY_ASSET_ROOT, String(Number(clinicId)));
+export const CLINIC_ASSET_ROOT = path.resolve(__dirname, "../../../public/images/clinic");
+export const getClinicAssetDir = (clinicId) => path.join(CLINIC_ASSET_ROOT, String(Number(clinicId)));
+
 export const clinicValidationRules = {
     clinic_id: { label: "Clinic ID", type: "number" },
     clinic_name: { label: "Clinic Name", required: true },
@@ -37,10 +38,9 @@ export const clinicValidationRules = {
 
     status: { label: "Status" },
 };
-export const getLogoExtension = (file = {}) => {
-    const mime = String(file.mimetype || "").toLowerCase();
-    if (mime === "image/png") return ".png";
-    if (mime === "image/webp") return ".webp";
-    if (mime === "image/svg+xml") return ".svg";
-    return ".jpg";
+
+export const ensureClinicAssetDir = (clinic_id) => {
+    const directory = getClinicAssetDir(clinic_id);
+    fs.mkdirSync(directory, { recursive: true });
+    return directory;
 };

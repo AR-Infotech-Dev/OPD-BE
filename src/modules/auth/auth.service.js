@@ -5,7 +5,7 @@ const table = (name) => `\`${legacyConfig.dbPrefix}${name}\``;
 
 export async function findActiveUserByIdentity(identity) {
   const rows = await query(
-    `SELECT * FROM ${table("admin")}
+    `SELECT * FROM ${table("users")}
      WHERE (email = ? OR userName = ? OR contactNo = ?)
        AND status = 'active'
      LIMIT 1`,
@@ -33,24 +33,24 @@ export async function findCompanyById(company_id) {
   return rows[0] || null;
 }
 
-export async function updateAdminLoginInfo(adminID, gfcmToken) {
+export async function updateusersLoginInfo(user_id, gfcmToken) {
   await query(
-    `UPDATE ${table("admin")}
+    `UPDATE ${table("users")}
      SET lastLogin = NOW(), gfcmToken = ?
-     WHERE adminID = ?`,
-    [gfcmToken, adminID]
+     WHERE user_id = ?`,
+    [gfcmToken, user_id]
   );
 }
 
-export async function createAdminSession(adminID, sessionKey, ip) {
+export async function createusersSession(user_id, sessionKey, ip) {
   await query(
-    `INSERT INTO ${table("admin_sessions")}
-      (adminID, sessionKey, accessDate, created_date, IP)
+    `INSERT INTO ${table("users_sessions")}
+      (user_id, sessionKey, accessDate, created_date, IP)
      VALUES (?, ?, NOW(), NOW(), ?)`,
-    [adminID, sessionKey, ip]
+    [user_id, sessionKey, ip]
   );
 }
 
-export async function deleteAdminSessions(adminID) {
-  await query(`DELETE FROM ${table("admin_sessions")} WHERE adminID = ?`, [adminID]);
+export async function deleteusersSessions(user_id) {
+  await query(`DELETE FROM ${table("users_sessions")} WHERE user_id = ?`, [user_id]);
 }

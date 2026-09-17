@@ -8,7 +8,7 @@ export const getNotifications = async (req, res) => {
     try {
         const { page = 1, limit = 20 } = req.body;
         const result = await NotificationsService.getNotifications({
-            userId: req.user.adminID,
+            userId: req.user.user_id,
             page,
             limit,
         });
@@ -35,7 +35,7 @@ export const getNotifications = async (req, res) => {
 ====================================================== */
 export const getUnreadCount = async (req, res) => {
     try {
-        const unread = await NotificationsService.getUnreadCount(req.user.adminID);
+        const unread = await NotificationsService.getUnreadCount(req.user.user_id);
 
         return successResponse(res, {
             code: 1004,
@@ -60,7 +60,7 @@ export const markAsRead = async (req, res) => {
     try {
         const result = await NotificationsService.markAsRead({
             notificationId: req.params.id,
-            userId: req.user.adminID,
+            userId: req.user.user_id,
         });
 
         if (!result.updated) {
@@ -91,7 +91,7 @@ export const markAsRead = async (req, res) => {
 ====================================================== */
 export const markAllAsRead = async (req, res) => {
     try {
-        await NotificationsService.markAllAsRead(req.user.adminID);
+        await NotificationsService.markAllAsRead(req.user.user_id);
 
         return successResponse(res, {
             code: 1002,
