@@ -17,6 +17,9 @@ import medicineRoutes from "#modules/medicine-master/medicine.routes.js";
 import { verifyToken } from "#middlewares/auth.middleware.js"
 import appointmentRoutes from "#modules/appointment/appointment.routes.js";
 
+import patientsRoutes from "#modules/patients/patients.routes.js";
+import doctorsRoutes from "#modules/doctors/doctors.routes.js";
+
 const router = express.Router();
 router.use('/', loginRoutes);
 router.use('/', bootstrapRoutes);
@@ -32,6 +35,9 @@ router.use("/notifications", verifyToken, notificationRoutes);
 router.use("/dashboard", verifyToken, dashboardRoutes);
 router.use('/user-roles', verifyToken, userroleRoutes);
 router.use('/medicine-master', verifyToken, medicineRoutes);
+
+router.use('/patients', verifyToken, patientsRoutes);
+router.use('/doctors', verifyToken, doctorsRoutes);
 
 router.use("/appointments", verifyToken, appointmentRoutes);
 export default router;
