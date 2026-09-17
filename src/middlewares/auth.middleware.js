@@ -62,7 +62,7 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
-    const activeSessionId = await getActiveSessionId(decoded.adminID, isMobile);
+    const activeSessionId = await getActiveSessionId(decoded.user_id, isMobile);
     if (!activeSessionId || activeSessionId !== decoded.active_session_id) {
       return failureResponse(res, {
         code: 2009,
@@ -71,7 +71,7 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
-    const currentUser = await getCurrentAccessUser(decoded.adminID);
+    const currentUser = await getCurrentAccessUser(decoded.user_id);
     if (!currentUser) return failureResponse(res, {code: 2007, httpStatus: 401, message: 'User or role is inactive'});
     req.user = { ...decoded, ...currentUser };
 

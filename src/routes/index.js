@@ -13,7 +13,9 @@ import clinicSettingRoutes from "#modules/clinics/clinic-setting.routes.js";
 import moduleAccessRoutes from "#modules/module-access/module-access.routes.js";
 import bootstrapRoutes from "#modules/bootstrap/bootstrap.routes.js";
 import userroleRoutes from "#modules/userrole/userrole.routes.js";
+import medicineRoutes from "#modules/medicine-master/medicine.routes.js";
 import { verifyToken } from "#middlewares/auth.middleware.js"
+import appointmentRoutes from "#modules/appointment/appointment.routes.js";
 
 import patientsRoutes from "#modules/patients/patients.routes.js";
 import doctorsRoutes from "#modules/doctors/doctors.routes.js";
@@ -32,8 +34,10 @@ router.use('/permissions', verifyToken, moduleAccessRoutes);
 router.use("/notifications", verifyToken, notificationRoutes);
 router.use("/dashboard", verifyToken, dashboardRoutes);
 router.use('/user-roles', verifyToken, userroleRoutes);
+router.use('/medicine-master', verifyToken, medicineRoutes);
 
 router.use('/patients', verifyToken, patientsRoutes);
 router.use('/doctors', verifyToken, doctorsRoutes);
 
+router.use("/appointments", verifyToken, appointmentRoutes);
 export default router;

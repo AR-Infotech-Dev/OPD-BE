@@ -4,36 +4,31 @@ import { prepareFilterData } from "#shared/utils/filter.builder.js";
 import { toMysqlDateTime } from "#shared/utils/dateTime.js";
 import { validateBody } from "#shared/utils/bodyValidator.js";
 import { clearClinicMailerCache } from "#shared/utils/email.js";
-import { clinicValidationRules } from "./clinic.utils.js";
+import { clinicValidationRules, ensureClinicAssetDir } from "./clinic.utils.js";
 import { env } from "#config/env.js";
 import path from "node:path";
 import fs from "fs";
-// TENANT SYNC 
-import { syncToTenant } from "#shared/utils/tenantSync.js";
+import { getImageExtension } from "#shared/utils/files.js";
 
 const MODULE_TABLE = "clinic_master";
 const default_columns = {};
 
 const custom_columns = {
   created_by: {
-    table: "admin",
+    table: "users",
     alias: "ad",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
   modified_by: {
-    table: "admin",
+    table: "users",
     alias: "am",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
 };
-
-// ======================================================
-// LIST COMPANIES
-// ======================================================
 export const list = async (req, res) => {
   try {
     const {
@@ -137,149 +132,6 @@ export const list = async (req, res) => {
     });
   }
 };
-export const uploadClinicLogo = async (req, res) => {
-  try {
-    if (!req.file?.buffer) {
-      return failureResponse(res, {
-        code: 2001,
-        httpStatus: 400,
-        message: "Clinic logo file is required",
-      });
-    }
-
-    const clinicId = Number(req.params.id || req.body.clinic_id);
-    if (!clinicId) return failureResponse(res, { code: 2001, httpStatus: 400, message: "Save the clinic before uploading its logo" });
-    const extension = getLogoExtension(req.file);
-    const fileName = `logo-${Date.now()}${extension}`;
-    const relativePath = `/images/clinic/${clinicId}/${fileName}`;
-    const assetDirectory = ensureClinicAssetDir(clinicId);
-    const absolutePath = path.join(assetDirectory, fileName);
-
-    fs.writeFileSync(absolutePath, req.file.buffer);
-
-    if (clinicId) {
-      const result = await CommonModel.updateMasterDetails({
-        table: MODULE_TABLE,
-        data: {
-          email_logo: relativePath,
-          modified_by: req.user.adminID,
-          modified_date: toMysqlDateTime(),
-        },
-        where: { clinic_id: clinicId },
-      });
-
-      await syncToTenant(clinicId, async () => {
-        await CommonModel.updateMasterDetails({
-          table: MODULE_TABLE,
-          data: {
-            email_logo: relativePath,
-            modified_by: req.user.adminID,
-            modified_date: toMysqlDateTime(),
-          },
-          where: { clinic_id: clinicId },
-        });
-      });
-
-      if (!result.affectedRows) {
-        return failureResponse(res, {
-          code: 2004,
-          httpStatus: 404,
-          message: "Clinic not found",
-        });
-      }
-
-      clearClinicMailerCache(clinicId);
-    }
-
-    return successResponse(res, {
-      code: 1002,
-      httpStatus: 200,
-      message: "Clinic logo uploaded successfully",
-      data: {
-        data: {
-          email_logo: relativePath,
-        },
-      },
-    });
-  } catch (error) {
-    return failureResponse(res, {
-      code: 2008,
-      httpStatus: 500,
-      message: error.message,
-    });
-  }
-};
-export const removeClinicLogo = async (req, res) => {
-  try {
-    const clinicId = req.params.id;
-    const clinic = await CommonModel.getMasterDetails(MODULE_TABLE, "email_logo", {
-      clinic_id: clinicId,
-    });
-
-    if (!clinic?.length) {
-      return failureResponse(res, {
-        code: 2004,
-        httpStatus: 404,
-        message: "Clinic not found",
-      });
-    }
-
-    const logoPath = clinic[0].email_logo;
-
-    // Delete physical file if exists
-    if (logoPath) {
-      const absolutePath = path.resolve(process.cwd(), logoPath.replace(/^\/+/, ""));
-
-      if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
-      }
-    }
-
-    // Update DB
-    await CommonModel.updateMasterDetails({
-      table: MODULE_TABLE,
-      data: {
-        email_logo: null,
-        modified_by: req.user.adminID,
-        modified_date: toMysqlDateTime(),
-      },
-      where: { clinic_id: clinicId },
-    });
-
-    await syncToTenant(clinicId, async () => {
-      await CommonModel.updateMasterDetails({
-        table: MODULE_TABLE,
-        data: {
-          email_logo: null,
-          modified_by: req.user.adminID,
-          modified_date: toMysqlDateTime(),
-        },
-        where: { clinic_id: clinicId },
-      });
-
-    });
-
-    // Clear mail cache
-    clearClinicMailerCache(clinicId);
-
-    return successResponse(res, {
-      code: 1003,
-      httpStatus: 200,
-      message: "Clinic logo removed successfully",
-      data: {},
-    });
-
-  } catch (error) {
-    return failureResponse(res, {
-      code: 2008,
-      httpStatus: 500,
-      message: error.message,
-    });
-  }
-};
-// ======================================================
-// CREATE / UPDATE / GET SINGLE
-// ======================================================
 export const getClinicDetails = async (req, res) => {
   try {
     const method = req.method.toUpperCase();
@@ -306,7 +158,7 @@ export const getClinicDetails = async (req, res) => {
         }
 
         delete data.clinic_id;
-        data.created_by = req.user.adminID;
+        data.created_by = req.user.user_id;
         data.created_date = toMysqlDateTime();
         data.status = data.status || "active";
         const result = await CommonModel.saveMasterDetails({
@@ -348,10 +200,9 @@ export const getClinicDetails = async (req, res) => {
         delete data.clinic_id;
         delete data.created_by;
         delete data.created_date;
-        data.modified_by = req.user.adminID;
+        data.modified_by = req.user.user_id;
         data.modified_date = toMysqlDateTime();
-        console.log('data : ',data);
-        
+
         const result = await CommonModel.updateMasterDetails({
           table: MODULE_TABLE,
           data,
@@ -414,10 +265,6 @@ export const getClinicDetails = async (req, res) => {
     });
   }
 };
-
-// ======================================================
-// DELETE
-// ======================================================
 export const changeStatus = async (req, res) => {
   try {
     const { action = "", ids = [] } = req.body;
@@ -454,5 +301,65 @@ export const changeStatus = async (req, res) => {
       httpStatus: 500,
       message: error.message,
     });
+  }
+};
+export const uploadClinicLogo = async (req, res) => {
+
+  try {
+    const clinic_id = Number(req.params.id);
+    if (!clinic_id || !req.file?.buffer) {
+      return failureResponse(res, { code: 2001, httpStatus: 400, message: "Clinic logo image are required" });
+    }
+
+    const clinics = await CommonModel.getMasterDetails(MODULE_TABLE, "clinic_logo", { clinic_id });
+    if (!clinics.length) {
+      return failureResponse(res, { code: 2004, httpStatus: 404, message: "Clinic not found" });
+    }
+
+    const assetDirectory = ensureClinicAssetDir(clinic_id);
+    const extension = getImageExtension(req.file);
+    const fileName = `logo-${Date.now()}${extension}`;
+    const relativePath = `/images/clinic/${clinic_id}/${fileName}`;
+    fs.writeFileSync(path.join(assetDirectory, fileName), req.file.buffer);
+
+    const previousPath = clinics[0].clinic_logo;
+    if (previousPath) {
+      const previousFile = path.resolve(process.cwd(), previousPath.replace(/^\/+/, ""));
+      if (fs.existsSync(previousFile)) fs.unlinkSync(previousFile);
+    }
+
+    const updateData = { clinic_logo: relativePath, modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
+    await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { clinic_id } });
+
+    return successResponse(res, {
+      code: 1002,
+      httpStatus: 200,
+      message: "Logo uploaded successfully",
+      data: { data: { clinic_logo: relativePath } },
+    });
+  } catch (error) {
+    return failureResponse(res, { code: 2008, httpStatus: 500, message: error.message });
+  }
+};
+export const removeClinicLogo = async (req, res) => {
+  try {
+    const clinic_id = Number(req.params.id);
+    const clinics = await CommonModel.getMasterDetails(MODULE_TABLE, "clinic_logo", { clinic_id });
+    if (!clinics.length) {
+      return failureResponse(res, { code: 2004, httpStatus: 404, message: "Clinic not found" });
+    }
+
+    const logoPath = clinics[0].clinic_logo;
+    if (logoPath) {
+      const logoFile = path.resolve(process.cwd(), logoPath.replace(/^\/+/, ""));
+      if (fs.existsSync(logoFile)) fs.unlinkSync(logoFile);
+    }
+
+    const updateData = { clinic_logo: null, modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
+    await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { clinic_id } });
+
+    return successResponse(res, { code: 1003, httpStatus: 200, message: "Clinic logo removed successfully", data: {} });
+  } catch (error) {
+    return failureResponse(res, { code: 2008, httpStatus: 500, message: error.message });
   }
 };
