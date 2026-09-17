@@ -27,17 +27,17 @@ const custom_columns = {
     select: "",
   },
   created_by: {
-    table: "admin",
+    table: "users",
     alias: "ad",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
   modified_by: {
-    table: "admin",
+    table: "users",
     alias: "am",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
 };
@@ -146,7 +146,7 @@ export const getUserRoleDetails = async (req, res) => {
 
         const data = validation.data;
         delete data.roleID;
-        data.created_by = req.user.adminID;
+        data.created_by = req.user.user_id;
         data.company_id = req.user.company_id;
         data.created_date = toMysqlDateTime();
 
@@ -186,7 +186,7 @@ export const getUserRoleDetails = async (req, res) => {
         delete data.company_id;
         delete data.created_by;
         delete data.created_date;
-        data.modified_by = req.user.adminID;
+        data.modified_by = req.user.user_id;
         data.modified_date = toMysqlDateTime();
 
         const where = { roleID };

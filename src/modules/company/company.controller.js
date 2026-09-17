@@ -17,17 +17,17 @@ const default_columns = {};
 
 const custom_columns = {
   created_by: {
-    table: "admin",
+    table: "users",
     alias: "ad",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
   modified_by: {
-    table: "admin",
+    table: "users",
     alias: "am",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
     select: "",
   },
 };
@@ -310,7 +310,7 @@ export const uploadCompanyLogo = async (req, res) => {
         table: MODULE_TABLE,
         data: {
           email_logo: relativePath,
-          modified_by: req.user.adminID,
+          modified_by: req.user.user_id,
           modified_date: toMysqlDateTime(),
         },
         where: { company_id: companyId },
@@ -321,7 +321,7 @@ export const uploadCompanyLogo = async (req, res) => {
           table: MODULE_TABLE,
           data: {
             email_logo: relativePath,
-            modified_by: req.user.adminID,
+            modified_by: req.user.user_id,
             modified_date: toMysqlDateTime(),
           },
           where: { company_id: companyId },
@@ -388,7 +388,7 @@ export const removeCompanyLogo = async (req, res) => {
       table: MODULE_TABLE,
       data: {
         email_logo: null,
-        modified_by: req.user.adminID,
+        modified_by: req.user.user_id,
         modified_date: toMysqlDateTime(),
       },
       where: { company_id: companyId },
@@ -399,7 +399,7 @@ export const removeCompanyLogo = async (req, res) => {
         table: MODULE_TABLE,
         data: {
           email_logo: null,
-          modified_by: req.user.adminID,
+          modified_by: req.user.user_id,
           modified_date: toMysqlDateTime(),
         },
         where: { company_id: companyId },
@@ -450,7 +450,7 @@ export const uploadCompanySignature = async (req, res) => {
       if (fs.existsSync(previousFile)) fs.unlinkSync(previousFile);
     }
 
-    const updateData = { authority_sign: relativePath, modified_by: req.user.adminID, modified_date: toMysqlDateTime() };
+    const updateData = { authority_sign: relativePath, modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
     await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
     await syncToTenant(companyId, async () => {
       await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
@@ -481,7 +481,7 @@ export const removeCompanySignature = async (req, res) => {
       if (fs.existsSync(signatureFile)) fs.unlinkSync(signatureFile);
     }
 
-    const updateData = { authority_sign: null, modified_by: req.user.adminID, modified_date: toMysqlDateTime() };
+    const updateData = { authority_sign: null, modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
     await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
     await syncToTenant(companyId, async () => {
       await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
@@ -527,7 +527,7 @@ export const uploadHappyClientLogos = async (req, res) => {
     });
 
     parseStoredLogos(companies[0].footer_logos).forEach((logo) => deleteCompanyAsset(companyId, logo.path || logo.url));
-    const updateData = { footer_logos: JSON.stringify(logos), modified_by: req.user.adminID, modified_date: toMysqlDateTime() };
+    const updateData = { footer_logos: JSON.stringify(logos), modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
     await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
     await syncToTenant(companyId, async () => CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } }));
 
@@ -543,7 +543,7 @@ export const removeHappyClientLogos = async (req, res) => {
     const companies = await CommonModel.getMasterDetails(MODULE_TABLE, "footer_logos", { company_id: companyId });
     if (!companies.length) return failureResponse(res, { code: 2004, httpStatus: 404, message: "Company not found" });
     parseStoredLogos(companies[0].footer_logos).forEach((logo) => deleteCompanyAsset(companyId, logo.path || logo.url));
-    const updateData = { footer_logos: null, modified_by: req.user.adminID, modified_date: toMysqlDateTime() };
+    const updateData = { footer_logos: null, modified_by: req.user.user_id, modified_date: toMysqlDateTime() };
     await CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } });
     await syncToTenant(companyId, async () => CommonModel.updateMasterDetails({ table: MODULE_TABLE, data: updateData, where: { company_id: companyId } }));
     return successResponse(res, { code: 1003, httpStatus: 200, message: "Happy client logos removed successfully", data: {} });
@@ -580,7 +580,7 @@ export const getCompanyDetails = async (req, res) => {
         }
 
         delete data.company_id;
-        data.created_by = req.user.adminID;
+        data.created_by = req.user.user_id;
         data.created_date = toMysqlDateTime();
         data.status = data.status || "active";
         const result = await CommonModel.saveMasterDetails({
@@ -630,9 +630,9 @@ export const getCompanyDetails = async (req, res) => {
         delete data.company_id;
         delete data.created_by;
         delete data.created_date;
-        data.modified_by = req.user.adminID;
+        data.modified_by = req.user.user_id;
         data.modified_date = toMysqlDateTime();
-        dataforsync.modified_by = req.user.adminID;
+        dataforsync.modified_by = req.user.user_id;
         dataforsync.modified_date = toMysqlDateTime();
         dataforsync.company_id = company_id;
 
@@ -775,7 +775,7 @@ export const exportCompanyDb = async (req, res) => {
     const dumps = [
       ["company_master", `company_id = ${companyId}`],
       ["user_role_master", `(company_id = ${companyId} OR company_id IS NULL OR company_id = 0)`],
-      ["admin", `(company_id = ${companyId} OR default_company = ${companyId})`],
+      ["users", `(company_id = ${companyId} OR default_company = ${companyId})`],
       ["role_module_access", `company_id = ${companyId}`],
       ["categories", `(is_sys_category = 'yes' OR company_id = ${companyId})`],
       ["products", `(company_id = ${companyId} OR company_id IS NULL)`],
@@ -787,7 +787,7 @@ export const exportCompanyDb = async (req, res) => {
       ["ticket_work_logs", `ticket_id IN (SELECT ticket_id FROM ${env.dbPrefix}tickets WHERE company_id = ${companyId})`],
       ["ticket_feedback", `ticket_id IN (SELECT ticket_id FROM ${env.dbPrefix}tickets WHERE company_id = ${companyId})`],
       ["ticket_visits", `ticket_id IN (SELECT ticket_id FROM ${env.dbPrefix}tickets WHERE company_id = ${companyId})`],
-      ["notifications", `user_id IN (SELECT adminID FROM ${env.dbPrefix}admin WHERE company_id = ${companyId} OR default_company = ${companyId})`],
+      ["notifications", `user_id IN (SELECT user_id FROM ${env.dbPrefix}users WHERE company_id = ${companyId} OR default_company = ${companyId})`],
       ["reminder_logs", `company_id = ${companyId}`],
     ];
 

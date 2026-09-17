@@ -7,10 +7,10 @@ import { query, DB_PREFIX } from "#config/database.js";
 // ===================================
 export const verifyUserDetails = async (userName) => {
   const sql = `
-    SELECT t.*, r.slug AS role_slug, cmp.company_name as company_name 
-    FROM ${DB_PREFIX}admin AS t
+    SELECT t.*, r.slug AS role_slug, cn.clinic_name as clinic_name,t.clinic_id 
+    FROM ${DB_PREFIX}users AS t
     LEFT JOIN ${DB_PREFIX}user_role_master as r ON t.roleID = r.roleID
-    LEFT JOIN ${DB_PREFIX}company_master as cmp ON t.company_id = cmp.company_id
+    LEFT JOIN ${DB_PREFIX}clinic_master as cn ON t.clinic_id = cn.clinic_id
     WHERE (
       t.email = ?
       OR t.userName = ?
@@ -28,7 +28,7 @@ export const findUserByEmail = async (email) => {
 
   const sql = `
     SELECT *
-    FROM ${DB_PREFIX}admin
+    FROM ${DB_PREFIX}users
     WHERE email = ?
     LIMIT 1
     `;
@@ -43,7 +43,7 @@ export const findUserByEmail = async (email) => {
 export const findUserByOtp = async (otp) => {
   const sql = `
     SELECT *
-    FROM ${DB_PREFIX}admin
+    FROM ${DB_PREFIX}users
     WHERE otp = ?
       AND isEmailSend = 'yes'
       LIMIT 1
@@ -58,47 +58,47 @@ export const findUserByOtp = async (otp) => {
 // ===================================
 // SAVE FORGOT PASSWORD OTP
 // ===================================
-export const saveForgotPasswordOtp = async (adminID, data = {}) => {
-  return await saveadminInfo(data, adminID);
+export const saveForgotPasswordOtp = async (user_id, data = {}) => {
+  return await saveusersInfo(data, user_id);
 };
 
 // ===================================
 // UPDATE PASSWORD WITH OTP RESET
 // ===================================
-export const updatePasswordByAdminID = async (adminID, data = {}) => {
-  return await saveadminInfo(data, adminID);
+export const updatePasswordByuser_id = async (user_id, data = {}) => {
+  return await saveusersInfo(data, user_id);
 };
 
 // ===================================
-// UPDATE ADMIN INFO
+// UPDATE users INFO
 // ===================================
-export const saveadminInfo = async (data, adminID) => {
+export const saveusersInfo = async (data, user_id) => {
   const keys = Object.keys(data);
   const values = Object.values(data);
 
   const setClause = keys.map((key) => `${key} = ?`).join(", ");
 
   const sql = `
-    UPDATE ${DB_PREFIX}admin
+    UPDATE ${DB_PREFIX}users
     SET ${setClause}
-    WHERE adminID = ?
+    WHERE user_id = ?
   `;
 
-  return await query(sql, [...values, adminID]);
+  return await query(sql, [...values, user_id]);
 };
 
 // ===================================
 // INSERT SESSION KEY
 // ===================================
 export const setSessionKey = async (
-  adminID,
+  user_id,
   sessionKey,
   ip
 ) => {
   const sql = `
-    INSERT INTO admin_sessions
+    INSERT INTO users_sessions
     (
-      adminID,
+      user_id,
       sessionKey,
       accessDate,
       created_date,
@@ -108,7 +108,7 @@ export const setSessionKey = async (
   `;
 
   return await query(sql, [
-    adminID,
+    user_id,
     sessionKey,
     ip,
   ]);
@@ -118,44 +118,44 @@ export const setSessionKey = async (
 // DELETE SESSION KEY
 // ===================================
 export const unsetSessionKey = async (
-  adminID
+  user_id
 ) => {
   const sql = `
-    DELETE FROM admin_sessions
-    WHERE adminID = ?
+    DELETE FROM users_sessions
+    WHERE user_id = ?
   `;
 
-  return await query(sql, [adminID]);
+  return await query(sql, [user_id]);
 };
 
 // ===================================
 // GET SESSION DETAILS
 // ===================================
 export const getSessionDetails = async (
-  adminID
+  user_id
 ) => {
   const sql = `
     SELECT *
-    FROM admin_sessions
-    WHERE adminID = ?
+    FROM users_sessions
+    WHERE user_id = ?
   `;
 
-  return await query(sql, [adminID]);
+  return await query(sql, [user_id]);
 };
 
 // ===================================
 // UPDATE SESSION TIME
 // ===================================
 export const updateSession = async (
-  adminID
+  user_id
 ) => {
   const sql = `
-    UPDATE admin_sessions
+    UPDATE users_sessions
     SET accessDate = NOW()
-    WHERE adminID = ?
+    WHERE user_id = ?
   `;
 
-  return await query(sql, [adminID]);
+  return await query(sql, [user_id]);
 };
 
 // ===================================
