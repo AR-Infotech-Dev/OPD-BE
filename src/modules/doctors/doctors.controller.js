@@ -15,7 +15,10 @@ import { env } from "#config/env.js";
 const MODULE_TABLE = "doctors";
 // ======================================================
 // VALIDATION SCHEMA
-// ======================================================
+// ==============================================
+// 
+
+========
 const doctorSchema = Joi.object({
   doctor_id: Joi.number().integer().positive().allow(null),
   clinic_id: Joi.number().integer().positive().allow(null),
