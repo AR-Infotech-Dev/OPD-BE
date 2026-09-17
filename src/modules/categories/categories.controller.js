@@ -15,8 +15,8 @@ const default_columns = {
 
 const custom_columns = {
     // company_id: { table: "company_master", alias: "dc", column: "company_name", key2: "company_id", select: "" },
-    created_by: { table: "admin", alias: "ad", column: "name", key2: "adminID", select: "" },
-    modified_by: { table: "admin", alias: "am", column: "name", key2: "adminID", select: "" },
+    created_by: { table: "users", alias: "ad", column: "name", key2: "user_id", select: "" },
+    modified_by: { table: "users", alias: "am", column: "name", key2: "user_id", select: "" },
 };
 
 // ======================================================
@@ -202,7 +202,7 @@ export const categoryMaster = async (req, res) => {
                     ...payload,
                     status: req.body.status || "active",
                     company_id: req.user.company_id || null,
-                    created_by: req.user.adminID,
+                    created_by: req.user.user_id,
                     created_date: toMysqlDateTime(),
                 });
 
@@ -242,7 +242,7 @@ export const categoryMaster = async (req, res) => {
 
                 const data = await buildTablePayload(MODULE_TABLE, {
                     ...payload,
-                    modified_by: req.user.adminID,
+                    modified_by: req.user.user_id,
                     modified_date: toMysqlDateTime(),
                 });
 
@@ -596,7 +596,7 @@ export const categoryUpdate = async (req, res) => {
 
         const payload = await buildTablePayload(MODULE_TABLE, {
             ...data,
-            modified_by: req.user.adminID,
+            modified_by: req.user.user_id,
             modified_date: toMysqlDateTime(),
         });
 

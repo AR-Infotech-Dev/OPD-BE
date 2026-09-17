@@ -15,10 +15,10 @@ export async function ensureActiveSessionColumn() {
 
   if (!ensureActiveSessionColumnPromise) {
     ensureActiveSessionColumnPromise = (async () => {
-      const rows = await query(`SHOW COLUMNS FROM ${DB_PREFIX}admin LIKE 'active_session_id'`);
+      const rows = await query(`SHOW COLUMNS FROM ${DB_PREFIX}users LIKE 'active_session_id'`);
 
       if (!rows.length) {
-        await query(`ALTER TABLE ${DB_PREFIX}admin ADD COLUMN active_session_id VARCHAR(64) NULL`);
+        await query(`ALTER TABLE ${DB_PREFIX}users ADD COLUMN active_session_id VARCHAR(64) NULL`);
       }
 
       ensuredActiveSessionColumn = true;
@@ -28,28 +28,28 @@ export async function ensureActiveSessionColumn() {
   return ensureActiveSessionColumnPromise;
 }
 
-export async function setActiveSessionId(adminID, activeSessionId, isMobile = false) {
+export async function setActiveSessionId(user_id, activeSessionId, isMobile = false) {
   await ensureActiveSessionColumn();
 
   if (isMobile) {
     return query(
-      `UPDATE ${DB_PREFIX}admin SET active_session_id_mob = ?, modified_date = NOW() WHERE adminID = ?`,
-      [activeSessionId, adminID]
+      `UPDATE ${DB_PREFIX}users SET active_session_id_mob = ?, modified_date = NOW() WHERE user_id = ?`,
+      [activeSessionId, user_id]
     );
   }
 
   return query(
-    `UPDATE ${DB_PREFIX}admin SET active_session_id = ?, modified_date = NOW() WHERE adminID = ?`,
-    [activeSessionId, adminID]
+    `UPDATE ${DB_PREFIX}users SET active_session_id = ?, modified_date = NOW() WHERE user_id = ?`,
+    [activeSessionId, user_id]
   );
 }
 
-export async function getActiveSessionId(adminID,isMobile = false) {
+export async function getActiveSessionId(user_id,isMobile = false) {
   const rows = await query(
     isMobile 
-    ?`SELECT active_session_id_mob as active_session_id FROM ${DB_PREFIX}admin WHERE adminID = ? LIMIT 1`
-    :`SELECT active_session_id as active_session_id FROM ${DB_PREFIX}admin WHERE adminID = ? LIMIT 1`,
-    [adminID]
+    ?`SELECT active_session_id_mob as active_session_id FROM ${DB_PREFIX}users WHERE user_id = ? LIMIT 1`
+    :`SELECT active_session_id as active_session_id FROM ${DB_PREFIX}users WHERE user_id = ? LIMIT 1`,
+    [user_id]
   );
 
   return rows[0]?.active_session_id || null;

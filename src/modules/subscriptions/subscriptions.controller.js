@@ -11,16 +11,16 @@ const default_columns = {};
 
 const custom_columns = {
   created_by: {
-    table: "admin",
+    table: "users",
     alias: "ad",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
   },
   modified_by: {
-    table: "admin",
+    table: "users",
     alias: "am",
     column: "name",
-    key2: "adminID",
+    key2: "user_id",
   },
 };
 
@@ -152,7 +152,7 @@ export const getPlanDetails = async (req, res) => {
           });
         }
         const data = validation.data;
-        data.created_by = req.user.adminID;
+        data.created_by = req.user.user_id;
         data.created_date = toMysqlDateTime();
 
         const result = await CommonModel.saveMasterDetails({ table: MODULE_TABLE, data, });
@@ -184,7 +184,7 @@ export const getPlanDetails = async (req, res) => {
         }
         const data = validation.data;
         delete data.created_by;
-        data.modified_by = req.user.adminID;
+        data.modified_by = req.user.user_id;
         data.modified_date = toMysqlDateTime();
 
         await CommonModel.updateMasterDetails({
