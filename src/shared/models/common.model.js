@@ -174,7 +174,7 @@ export const GetMasterListDetails = async ({ select = "*", table = "", where = [
         const safeStart = Number(start) || 0;
         sql += ` LIMIT ${safeLimit} OFFSET ${safeStart}`;
     }
-    // printSql(sql, values)
+    printSql(sql, values)
 
     const rows = await query(sql, params);
     return rows;
@@ -276,7 +276,7 @@ export const deleteMasterDetails = async ({ table = "", where = {} } = {}) => {
 // =====================================
 // CHANGE STATUS
 // =====================================
-export const changeMasterStatus = async ({ table = "", status = "delete", ids = [], key = "adminID" } = {}) => {
+export const changeMasterStatus = async ({ table = "", status = "delete", ids = [], key = "user_id" } = {}) => {
     const placeholders = ids.map(() => "?").join(",");
     const sql = ` UPDATE ${DB_PREFIX}${table} SET status = ? WHERE ${key} IN (${placeholders}) `;
     const result = await query(sql, [status, ...ids]);

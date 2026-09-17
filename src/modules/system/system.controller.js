@@ -105,7 +105,7 @@ export const getFreeTextSearch = async (req, res) => {
       where.push(`t.status = ?`);
       values.push("active");
     }
-    if (!isSuperAdmin(req.user) && ['customer', 'admin'].includes(tableName)) {
+    if (!isSuperAdmin(req.user) && ['customer', 'users'].includes(tableName)) {
       where.push(`t.company_id = ${req.user.company_id} `);
     }
     if (!isSuperAdmin(req.user) && isCompanyWise === true) {
@@ -173,7 +173,7 @@ export const getFreeTextAssignee = async (req, res) => {
       where.push(`t.status = ?`);
       values.push("active");
     }
-    if (!isSuperAdmin(req.user) && ['customer', 'admin'].includes(tableName)) {
+    if (!isSuperAdmin(req.user) && ['customer', 'users'].includes(tableName)) {
       where.push(`t.company_id = ${req.user.company_id} `);
     }
     if (!isSuperAdmin(req.user) && isCompanyWise === true) {
@@ -185,7 +185,7 @@ export const getFreeTextAssignee = async (req, res) => {
 
     let select = sel;
 
-    if (tableName === "admin") {
+    if (tableName === "users") {
       const companyId = Number(req.user.company_id || 0);
       const ticketCompanyCondition = companyId ? ` AND pt.company_id = ${companyId}` : "";
 
@@ -193,12 +193,12 @@ export const getFreeTextAssignee = async (req, res) => {
         type: "LEFT JOIN",
         table: "tickets",
         alias: "pt",
-        key1: "adminID",
+        key1: "user_id",
         key2: "assignee",
       });
 
       select = `${select}, COALESCE(COUNT(CASE WHEN pt.status = 'active' AND pt.ticket_status <> '208'${ticketCompanyCondition} THEN pt.ticket_id END), 0) AS pending_tickets_count`;
-      other.groupBy = "t.adminID";
+      other.groupBy = "t.user_id";
     }
     const result = await CommonModel.GetMasterListDetails({ select, table: tableName, where, values, join, other });
     if (result.length) {

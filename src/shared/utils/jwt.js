@@ -4,7 +4,7 @@ import { jwtSecret, jwtExpire } from "#config/legacy.js";
 export const generateToken = (user) => {
   return jwt.sign(
     {
-      adminID: user.adminID,
+      user_id: user.user_id,
       name: user.name,
       roleID: user.roleID
     },

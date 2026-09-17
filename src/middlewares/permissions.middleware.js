@@ -17,7 +17,7 @@ export const requirePermission = (moduleKey, action) => {
         return next();
       }
 
-      const user_id = req.user?.adminID;
+      const user_id = req.user?.user_id;
       const company_id = req.user?.company_id;
 
       if (!user_id || !company_id) {

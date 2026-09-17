@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { query } from "#config/database.js";
 import { env } from "#config/env.js";
-import { verifyUserDetails, findUserByEmail, saveForgotPasswordOtp, findUserByOtp, updatePasswordByAdminID } from "./auth.model.js";
+import { verifyUserDetails, findUserByEmail, saveForgotPasswordOtp, findUserByOtp, updatePasswordByuser_id } from "./auth.model.js";
 import { successResponse, failureResponse } from "#shared/utils/apiResponse.js";
 import { validateBody } from "#shared/utils/bodyValidator.js";
 import { toMysqlDateTime } from "#shared/utils/dateTime.js";
@@ -71,9 +71,9 @@ export const login = async (req, res) => {
     }
 
     if (!isPasswordHash(user.password)) {
-      await updatePasswordByAdminID(user.adminID, {
+      await updatePasswordByuser_id(user.user_id, {
         password: await hashPassword(loginPassword),
-        modified_by: user.adminID,
+        modified_by: user.user_id,
         modified_date: toMysqlDateTime(),
       });
     }
@@ -84,11 +84,11 @@ export const login = async (req, res) => {
     const clinic_id = user.clinic_id  || null;
     const clinic_name = user.clinic_name || null;
     const activeSessionId = createActiveSessionId();
-    await setActiveSessionId(user.adminID, activeSessionId, isMobile);
+    await setActiveSessionId(user.user_id, activeSessionId, isMobile);
 
     const token = jwt.sign(
       {
-        adminID: user.adminID,
+        user_id: user.user_id,
         username: user.userName,
         roleID: user.roleID,
         role_slug: user.role_slug,
@@ -112,7 +112,7 @@ export const login = async (req, res) => {
         data: {
           token,
           user: {
-            adminID: user.adminID,
+            user_id: user.user_id,
             name: user.name,
             userName: user.userName,
             roleID: user.roleID,
@@ -136,7 +136,7 @@ export const login = async (req, res) => {
       httpStatus: 200,
       data: {
         user: {
-          adminID: user.adminID,
+          user_id: user.user_id,
           name: user.name,
           userName: user.userName,
           roleID: user.roleID,
@@ -200,11 +200,11 @@ export const forgotPassword = async (req, res) => {
 
     const otp = generateOtp();
     const expiryDate = new Date(Date.now() + 10 * 60 * 1000);
-    await saveForgotPasswordOtp(user.adminID, {
+    await saveForgotPasswordOtp(user.user_id, {
       otp,
       otp_exp_time: toMysqlDateTime(expiryDate),
       isEmailSend: "yes",
-      modified_by: user.adminID,
+      modified_by: user.user_id,
       modified_date: toMysqlDateTime(),
     });
     const template = await renderTemplate("forgotPasswordOtp", "email", {
@@ -280,12 +280,12 @@ export const verifyForgotPassword = async (req, res) => {
 
     const hashedPassword = await hashPassword(new_password);
 
-    await updatePasswordByAdminID(user.adminID, {
+    await updatePasswordByuser_id(user.user_id, {
       password: hashedPassword,
       otp: null,
       otp_exp_time: null,
       isEmailSend: "no",
-      modified_by: user.adminID,
+      modified_by: user.user_id,
       modified_date: toMysqlDateTime(),
     });
 
