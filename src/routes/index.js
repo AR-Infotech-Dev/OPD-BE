@@ -14,6 +14,7 @@ import moduleAccessRoutes from "#modules/module-access/module-access.routes.js";
 import bootstrapRoutes from "#modules/bootstrap/bootstrap.routes.js";
 import userroleRoutes from "#modules/userrole/userrole.routes.js";
 import { verifyToken } from "#middlewares/auth.middleware.js"
+import appointmentRoutes from "#modules/appointment/appointment.routes.js";
 
 const router = express.Router();
 router.use('/', loginRoutes);
@@ -29,5 +30,5 @@ router.use('/permissions', verifyToken, moduleAccessRoutes);
 router.use("/notifications", verifyToken, notificationRoutes);
 router.use("/dashboard", verifyToken, dashboardRoutes);
 router.use('/user-roles', verifyToken, userroleRoutes);
-
+router.use("/appointments", verifyToken, appointmentRoutes);
 export default router;
