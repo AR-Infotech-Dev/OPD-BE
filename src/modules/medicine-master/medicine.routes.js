@@ -2,22 +2,18 @@ import express from 'express';
 import * as medicineController from './medicine.controller.js';
 import { requirePermission } from '#middlewares/permissions.middleware.js';
 import { tenantDbMiddleware } from '#middlewares/ownDB.middleware.js';
-const medicinesRoutes = express.Router();
+const medicineRoutes = express.Router();
 
-medicinesRoutes.post('/', requirePermission(['admin', 'users'], 'view'), medicineController.list);
+medicineRoutes.post('/', requirePermission(['admin', 'medicine'], 'view'), medicineController.list);
 // ONLY ON SIDE TENANT-DB / MAIN-DB
-medicinesRoutes.post('/delete', requirePermission(['admin', 'users'], 'delete'), medicineController.changeStatus);
+medicineRoutes.post('/delete', requirePermission(['admin', 'medicine'], 'delete'), medicineController.changeStatus);
 
 // USED FOR BOTH SIDE WITH TENANT-SYNC
 
-
-// medicinesRoutes.get('/profile', medicineController.getProfile);
-// medicinesRoutes.post('/profile', medicineController.updateProfile);
-// medicinesRoutes.post('/profile/change-password', medicineController.changeProfilePassword);
-medicinesRoutes.put('/create', requirePermission(['admin', 'users'], 'create'), medicineController.getAdminDetails);
-medicinesRoutes.get('/:id', requirePermission(['admin', 'users'], 'view'), medicineController.getAdminDetails);
-medicinesRoutes.post('/:id', requirePermission(['admin', 'users'], 'edit'), medicineController.getAdminDetails);
+medicineRoutes.put('/create', requirePermission(['admin', 'medicine'], 'create'), medicineController.getMedicineDetails);
+medicineRoutes.get('/:id', requirePermission(['admin', 'medicine'], 'view'), medicineController.getMedicineDetails);
+medicineRoutes.post('/:id', requirePermission(['admin', 'medicine'], 'edit'), medicineController.getMedicineDetails);
 
 // medicinesRoutes.post('/delete/:id', medicineController.changeStatus);
 
-export default medicinesRoutes;
+export default medicineRoutes;

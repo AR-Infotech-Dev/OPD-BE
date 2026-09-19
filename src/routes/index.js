@@ -31,7 +31,7 @@ router.use('/permissions', verifyToken, moduleAccessRoutes);
 router.use("/notifications", verifyToken, notificationRoutes);
 router.use("/dashboard", verifyToken, dashboardRoutes);
 router.use('/user-roles', verifyToken, userroleRoutes);
-router.use('/medicine-master', verifyToken, medicineRoutes);
+router.use('/medicines', verifyToken, medicineRoutes);
 
 router.use("/appointments", verifyToken, appointmentRoutes);
 export default router;
